@@ -4,7 +4,21 @@ import fs from 'node:fs'
 import process from 'node:process'
 import { pathToFileURL } from 'node:url'
 
-import config from './config.json' with { type: 'json' }
+import upstreamConfig from './config.json' with { type: 'json' }
+
+// Resolve the repo this run actually operates on. config.json pins the upstream
+// (deepseek-harness/deepseek-harness), which is right there but wrong everywhere
+// else: in a fork or mirror every lifecycle/policy API call targets a repo that
+// does not exist, so the run 404s and the policy gate fails. GITHUB_REPOSITORY
+// is always the repo the workflow is running in, so prefer it and keep
+// config.json as the fallback for local runs outside Actions. Rebound rather than
+// mutated because a JSON module namespace has read-only properties.
+const [ghOwner, ghRepo] = (process.env.GITHUB_REPOSITORY ?? '').split('/')
+const config = {
+  ...upstreamConfig,
+  organization: ghOwner || upstreamConfig.organization,
+  repository: ghRepo || upstreamConfig.repository,
+}
 
 const API_VERSION = '2026-03-10'
 const BODY_LIMIT = 50
