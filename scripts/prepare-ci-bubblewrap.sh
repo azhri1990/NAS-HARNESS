@@ -4,9 +4,16 @@ set -euo pipefail
 # Ubuntu's package transaction scans the hosted image's full dpkg database and
 # runs post-install hooks. CI needs only the signed-archive payload, so pin and
 # verify that payload before extracting it into the ephemeral runner directory.
+#
+# The payload comes from snapshot.ubuntu.com, not archive.ubuntu.com. The pool
+# only carries the current point release, so a pinned version disappears from it
+# once Ubuntu supersedes it — which is what turned this URL into a 404. The
+# snapshot service is immutable, so the pin below keeps resolving to the same
+# bytes, and the checksum still proves they are the ones we reviewed.
 readonly BUBBLEWRAP_VERSION='0.9.0-1ubuntu0.1'
+readonly BUBBLEWRAP_SNAPSHOT='20241015T000000Z'
 readonly BUBBLEWRAP_SHA256='1b506492bd9c7fd0cdb4f02ac822f1d3e336b0aead5113c1239baf8db5db562a'
-readonly BUBBLEWRAP_URL="https://archive.ubuntu.com/ubuntu/pool/main/b/bubblewrap/bubblewrap_${BUBBLEWRAP_VERSION}_amd64.deb"
+readonly BUBBLEWRAP_URL="https://snapshot.ubuntu.com/ubuntu/${BUBBLEWRAP_SNAPSHOT}/pool/main/b/bubblewrap/bubblewrap_${BUBBLEWRAP_VERSION}_amd64.deb"
 
 : "${RUNNER_TEMP:?prepare-ci-bubblewrap requires RUNNER_TEMP}"
 : "${GITHUB_PATH:?prepare-ci-bubblewrap requires GITHUB_PATH}"
